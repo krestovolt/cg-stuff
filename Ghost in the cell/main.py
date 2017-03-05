@@ -50,7 +50,6 @@ def get_path(path_matrix,source,dest):
     j = int(dest.fid)
     path_id.appendleft(j)
     while True:
-        print('J',j,'I',i,file=sys.stderr)
         j = int(path_matrix[i][j])
         if j == -1:
             return
@@ -84,7 +83,7 @@ class Factory:
                         else "A" if self.capacity <= 0 else "A"
         if self.status == "A":
             self.request_troops = abs(self.troops)+10
-        return self.status
+        return self.status if self.production!= 0 else "G"
     def recalc_cap(self,r=0):
         self.capacity = int((self.troops+r)/2)
     def pre_calc_nearest(self,fs,cm):
@@ -101,17 +100,17 @@ def broadcast_command(path,source,factory_list,troops_sent=0):
         if tp.owner != 1:
             prev_tp = list(filter(lambda x: x.fid == path[p-1],factory_list))[0]
             if tp.fid in prev_tp.assist_to:
-                prev_tp.assist_to[tp.fid] += source.capacity if troops_sent==0 else troops_sent
+                prev_tp.assist_to[tp.fid] += abs(source.capacity) if troops_sent==0 else abs(troops_sent)
             else:
-                prev_tp.assist_to[tp.fid] = source.capacity if troops_sent==0 else troops_sent
+                prev_tp.assist_to[tp.fid] = abs(source.capacity) if troops_sent==0 else abs(troops_sent)
             break
         elif tp.owner == 1:
             tp.assisting = 'Y'
             prev_tp = list(filter(lambda x: x.fid == path[p-1],factory_list))[0]
             if tp.fid in prev_tp.assist_to:
-                prev_tp.assist_to[tp.fid] += source.capacity if troops_sent==0 else troops_sent
+                prev_tp.assist_to[tp.fid] += abs(source.capacity) if troops_sent==0 else abs(troops_sent)
             else:
-                prev_tp.assist_to[tp.fid] = source.capacity if troops_sent==0 else troops_sent
+                prev_tp.assist_to[tp.fid] = abs(source.capacity) if troops_sent==0 else abs(troops_sent)
 
 
 
@@ -133,7 +132,7 @@ def nearest_factory(source,bomb_target,all_f):
                 f.status = 'R'
                 broadcast_command(path_f,source,all_f)
                 flag_help += 1
-            elif f.owner != 1 and f.production > 0 and source_status != 'A' and flag != 3:
+            elif f.owner != 1 and f.production > 0 and source_status != 'A' and flag != 2:
                 sent_troops = 0
                 flag += 1
                 path_f = None
@@ -166,7 +165,7 @@ def nearest_factory(source,bomb_target,all_f):
         counter += 1
     if len(source.assist_to) != 0:
         for dest_id,amount in source.assist_to.items():
-            query += 'MOVE '+str(source.fid)+' '+str(int(dest_id))+' '+str(int(amount))+';'
+            query += 'MOVE '+str(source.fid)+' '+str(int(dest_id))+' '+str(int(abs(amount)))+';'
         source.assist_to.clear()
     if source.troops - 10 > source.attacker * 1.5:
         source.troops -= 10
